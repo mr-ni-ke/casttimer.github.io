@@ -12,15 +12,20 @@
               document.body.innerHTML = "<h2>Access Denied</h2>";
               return;
             }
-
-            // Применить имя и язык
-            document.getElementById("name").value = userData.name;
-            document.getElementById("lang").value = userData.language;
-            document.querySelector(".container").style.display = "block";
-            document.getElementById("auth").style.display = "none";
+            document.body.innerHTML =
+              "<h2>Welcome, " + userData.name + "!</h2>" +
+              "<p>Language: " + userData.language + "</p>";
           })
           .verifyIdToken(id_token);
       }
+
+      window.onload = () => {
+        google.accounts.id.initialize({
+          client_id: "ВАШ_CLIENT_ID", // замените на ваш
+          callback: handleCredentialResponse,
+        });
+        google.accounts.id.prompt(); // показывает выбор аккаунта
+      };
     </script>
     <style>
       :root {
