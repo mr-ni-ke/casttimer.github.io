@@ -7,19 +7,19 @@
       function handleCredentialResponse(response) {
         const id_token = response.credential;
         fetch("https://script.google.com/macros/s/AKfycb.../exec", {
-  method: "POST",
-  body: JSON.stringify({ token: id_token }),
-  headers: {
-    "Content-Type": "application/json"
-  }
-})
-.then(r => r.json())
-.then(data => {
-  console.log("Ответ от Apps Script:", data);
-})
-.catch(err => {
-  console.error("Ошибка:", err);
-});
+        	method: "POST",
+  		body: JSON.stringify({ token: id_token }),
+  		headers: {
+    			"Content-Type": "application/json"
+  		}
+	})
+	.then(r => r.json())
+	.then(data => {
+  		console.log("Ответ от Apps Script:", data);
+	})
+	.catch(err => {
+  		console.error("Ошибка:", err);
+	});
       }
     </script>
   </head>
