@@ -1,36 +1,220 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <base target="_top" />
+    <meta charset="UTF-8" />
+    <title>Google Sign-In</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
+      const backendURL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+
       function handleCredentialResponse(response) {
         const id_token = response.credential;
-        google.script.run
-          .withSuccessHandler((userData) => {
-            if (!userData) {
-              document.body.innerHTML = "<h2>Access Denied</h2>";
-              return;
-            }
-            document.body.innerHTML = `
-              <h2>Welcome, ${userData.name}</h2>
-              <p>Language: ${userData.language}</p>
-            `;
-          })
-          .verifyIdToken(id_token);
+
+        fetch(backendURL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_token })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            document.body.innerHTML = `<h2>Добро пожаловать, ${data.name}</h2>`;
+          } else {
+            document.body.innerHTML = `<h2>Access Denied</h2>`;
+          }
+        })
+        .catch(err => {
+          console.error('Ошибка:', err);
+          document.body.innerHTML = `<h2>Ошибка авторизации</h2>`;
+        });
       }
 
-      window.onload = () => {
+      window.onload = function () {
         google.accounts.id.initialize({
-          client_id: "YOUR_CLIENT_ID.apps.googleusercontent.com",
-          callback: handleCredentialResponse,
-          ux_mode: "popup",
+          client_id: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+          callback: handleCredentialResponse
         });
+
+        google.accounts.id.renderButton(
+          document.getElementById("buttonDiv"),
+          { theme: "outline", size: "large" }
+        );
+
         google.accounts.id.prompt();
       };
     </script>
     <style>
-      /* всё как было — без изменений */
+      :root {
+        --bg-color: white;
+        --text-color: #222;
+        --input-bg: #fff;
+        --input-border: #ccc;
+        --btn-bg: #007BFF;
+        --btn-bg-hover: #0056b3;
+        --btn-disabled-bg: #555;
+        --timer-color-active: #4CAF50;
+        --timer-color-inactive: inherit;
+      }
+
+      body.dark {
+        --bg-color: #121212;
+        --text-color: #eee;
+        --input-bg: #222;
+        --input-border: #444;
+      }
+
+      body {
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: sans-serif;
+
+        background-image: url("https://staticfiles.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/2560x1440_air_superiority_logo_ed193962ef380686c0f30174866f51d9.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center top;
+        background-attachment: fixed;
+
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+        }
+
+      body.dark::before {
+        background-color: rgba(0, 0, 0, 0.75);
+      }
+
+      .container {
+        background: var(--bg-color);
+        padding: 30px 40px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        min-width: 300px;
+        max-width: 400px;
+        width: 90vw;
+        box-sizing: border-box;
+        text-align: center;
+        color: var(--text-color);
+        transition: background-color 0.3s, color 0.3s;
+        position: relative;
+      }
+
+      label {
+        font-size: 1.5em;
+        display: block;
+        margin-top: 10px;
+        margin-bottom: 5px;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 0px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 2em;
+        font-weight: bold;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1em;
+        text-indent: 10px;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      button {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1em;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      button {
+        background-color: var(--btn-bg);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s;
+      }
+
+      button:disabled {
+        background-color: var(--btn-disabled-bg);
+        cursor: not-allowed;
+      }
+
+      button:hover:enabled {
+        background-color: var(--btn-bg-hover);
+      }
+
+      #timer {
+        text-align: center;
+        font-size: 2em;
+        font-weight: bold;
+        margin-top: px;
+        color: var(--timer-color-inactive);
+        transition: color 0.3s;
+      }
+
+      #timer.active {
+        color: var(--timer-color-active);
+      }
+
+      #savedTime {
+        font-size: 0.9em;
+        margin-top: 0;
+        min-height: 1.2em;
+        color: #4CAF50;
+        transition: color 0.3s;
+      }
+
+      #toggleThemeBtn {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          background-color: #444;
+          border-radius: 8px;
+          padding: 2px 6px;
+          width: auto;
+          margin: 0;
+
+      }
+
+      #toggleThemeBtn:hover {
+        background-color: #666;
+      }
     </style>
   </head>
   <body>
@@ -89,8 +273,15 @@
       }
 
       toggleThemeBtn.addEventListener("click", () => {
-        setTheme(body.classList.contains("dark") ? "light" : "dark");
+        if (body.classList.contains("dark")) {
+          setTheme("light");
+        } else {
+          setTheme("dark");
+        }
       });
+
+      let startTime = null;
+      let interval = null;
 
       function formatTime(ms) {
         const totalSec = Math.floor(ms / 1000);
@@ -100,63 +291,58 @@
         return `${hrs}:${mins}:${secs}`;
       }
 
-      function initTimer() {
-        const timerEl = document.getElementById("timer");
-        const savedTimeEl = document.getElementById("savedTime");
-        const startBtn = document.getElementById("startBtn");
-        const stopBtn = document.getElementById("stopBtn");
-        let startTime = null;
-        let interval = null;
+      const timerEl = document.getElementById("timer");
+      const savedTimeEl = document.getElementById("savedTime");
 
-        startBtn.onclick = () => {
-          startTime = new Date();
-          startBtn.disabled = true;
-          stopBtn.disabled = false;
-          savedTimeEl.textContent = "";
-          timerEl.classList.add("active");
+      document.getElementById("startBtn").onclick = () => {
+        startTime = new Date();
+        document.getElementById("startBtn").disabled = true;
+        document.getElementById("stopBtn").disabled = false;
 
-          interval = setInterval(() => {
-            const now = new Date();
-            const elapsed = now.getTime() - startTime.getTime();
-            timerEl.textContent = formatTime(elapsed);
-          }, 1000);
-        };
+        savedTimeEl.textContent = "";
+        timerEl.classList.add("active");
 
-        stopBtn.onclick = () => {
-          if (!startTime) return;
+        interval = setInterval(() => {
+          const now = new Date();
+          const elapsed = now.getTime() - startTime.getTime();
+          timerEl.textContent = formatTime(elapsed);
+        }, 1000);
+      };
 
-          clearInterval(interval);
-          const stopTime = new Date();
-          const durationMs = stopTime.getTime() - startTime.getTime();
-          const durationSec = (durationMs / 1000).toFixed(2);
+      document.getElementById("stopBtn").onclick = () => {
+        if (!startTime) return;
 
-          const name = document.getElementById("name").value;
-          const language = document.getElementById("lang").value;
-          const mode = document.getElementById("modeSelect").value;
+        clearInterval(interval);
 
-          const payload = {
-            start: startTime.toISOString(),
-            stop: stopTime.toISOString(),
-            name,
-            language,
-            duration: parseFloat(durationSec),
-            mode
-          };
+        const stopTime = new Date();
+        const durationMs = stopTime.getTime() - startTime.getTime();
+        const durationSec = (durationMs / 1000).toFixed(2);
 
-          fetch('https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+        const name = document.getElementById("name").value;
+        const language = document.getElementById("lang").value;
+        const mode = document.getElementById("modeSelect").value;
 
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
-          timerEl.textContent = "00:00:00";
-          timerEl.classList.remove("active");
-          savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
-          startTime = null;
-        };
-      }
+        const startStr = startTime.toISOString();
+        const stopStr = stopTime.toISOString();
+
+        google.script.run.saveTime(
+          startStr,
+          stopStr,
+          language,
+          name,
+          parseFloat(durationSec),
+          mode
+        );
+
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("stopBtn").disabled = true;
+
+        timerEl.textContent = "00:00:00";
+        timerEl.classList.remove("active");
+
+        savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
+        startTime = null;
+      };
     </script>
   </body>
 </html>
