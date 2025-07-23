@@ -1,10 +1,11 @@
+<!-- Весь HTML: адаптирован под GitHub Pages -->
 <!DOCTYPE html>
 <html>
-  <head>
-    <base target="_top" />
-    <meta name="google-signin-client_id" content="619365294529-aq28ud62bftedigk08olqfdsfmjaae32.apps.googleusercontent.com">
-    <style>
-      :root {
+<head>
+  <meta charset="UTF-8">
+  <title>Cast Timer</title>
+  <style>
+     :root {
         --bg-color: white;
         --text-color: #222;
         --input-bg: #fff;
@@ -175,149 +176,117 @@
       #toggleThemeBtn:hover {
         background-color: #666;
       }
-    </style>
-  </head>
-  <body>
-    <? if (accessDenied) { ?>
-      <div class="container">
-        <h2>Access Denied</h2>
-        <p>Your Google account is not authorized to access this tool.</p>
-        <!-- Google Sign-In -->
-        <div id="g_id_onload"
-            data-client_id="619365294529-aq28ud62bftedigk08olqfdsfmjaae32.apps.googleusercontent.com"
-            data-auto_prompt="false"
-            data-callback="handleCredentialResponse">
-        </div>
-        <div class="g_id_signin"
-            data-type="standard"
-            data-size="large"
-            data-theme="outline"
-            data-text="signin_with"
-            data-shape="rectangular"
-            data-logo_alignment="left">
-        </div>
-      </div>
+  </style>
+</head>
+<body>
+  <div class="container">
+    <label>Welcome,</label>
+    <input type="text" id="name" value="_MRNiKe_" readonly />
+    <input type="text" id="lang" value="RU" hidden readonly />
 
-      <script src="https://accounts.google.com/gsi/client" async defer></script>
-      <script>
-        function handleCredentialResponse(response) {
-          location.reload();
-        }
-      </script>
-    <? } else { ?>
-      <div class="container">
-        <label>Welcome,</label>
-        <input type="text" id="name" value="<?= defaultName ?>" readonly />
-        <input type="text" id="lang" value="<?= defaultLang ?>" readonly hidden/>
+    <label>You are MC or CC today?</label>
+    <select id="modeSelect">
+      <option value="MC">MC</option>
+      <option value="CC">CC</option>
+    </select>
 
-        <label>You are MC or CC today?</label>
-        <select id="modeSelect">
-          <option value="MC">MC</option>
-          <option value="CC">CC</option>
-        </select>
+    <button id="startBtn">Start</button>
+    <button id="stopBtn" disabled>Stop</button>
 
-        <button id="startBtn">Start</button>
-        <button id="stopBtn" disabled>Stop</button>
+    <p id="timer">00:00:00</p>
+    <p id="savedTime"></p>
+    <button id="toggleThemeBtn">Switch to Dark</button>
+  </div>
 
-        <p id="timer">00:00:00</p>
-        <p id="savedTime"></p>
+  <script>
+    const GAS_ENDPOINT = 'https://script.google.com/macros/s/PASTE_YOUR_DEPLOYED_URL_HERE/exec';
 
-        <button id="toggleThemeBtn">Switch to Dark</button>
-      </div>
-      <script>
-        const body = document.body;
-        const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+    const body = document.body;
+    const toggleThemeBtn = document.getElementById("toggleThemeBtn");
 
-        function setTheme(theme) {
-          if (theme === "dark") {
-            body.classList.add("dark");
-            toggleThemeBtn.textContent = "L";
-          } else {
-            body.classList.remove("dark");
-            toggleThemeBtn.textContent = "D";
-          }
-          localStorage.setItem("theme", theme);
-        }
+    function setTheme(theme) {
+      if (theme === "dark") {
+        body.classList.add("dark");
+        toggleThemeBtn.textContent = "L";
+      } else {
+        body.classList.remove("dark");
+        toggleThemeBtn.textContent = "D";
+      }
+      localStorage.setItem("theme", theme);
+    }
 
-        const savedTheme = localStorage.getItem("theme");
-        if (savedTheme) {
-          setTheme(savedTheme);
-        } else {
-          setTheme("light");
-        }
+    const savedTheme = localStorage.getItem("theme");
+    setTheme(savedTheme || "light");
 
-        toggleThemeBtn.addEventListener("click", () => {
-          if (body.classList.contains("dark")) {
-            setTheme("light");
-          } else {
-            setTheme("dark");
-          }
-        });
+    toggleThemeBtn.addEventListener("click", () => {
+      setTheme(body.classList.contains("dark") ? "light" : "dark");
+    });
 
-        let startTime = null;
-        let interval = null;
+    let startTime = null;
+    let interval = null;
 
-        function formatTime(ms) {
-          const totalSec = Math.floor(ms / 1000);
-          const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
-          const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
-          const secs = String(totalSec % 60).padStart(2, "0");
-          return `${hrs}:${mins}:${secs}`;
-        }
+    const timerEl = document.getElementById("timer");
+    const savedTimeEl = document.getElementById("savedTime");
 
-        const timerEl = document.getElementById("timer");
-        const savedTimeEl = document.getElementById("savedTime");
+    function formatTime(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+      const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+      const secs = String(totalSec % 60).padStart(2, "0");
+      return `${hrs}:${mins}:${secs}`;
+    }
 
-        document.getElementById("startBtn").onclick = () => {
-          startTime = new Date();
-          document.getElementById("startBtn").disabled = true;
-          document.getElementById("stopBtn").disabled = false;
+    document.getElementById("startBtn").onclick = () => {
+      startTime = new Date();
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("stopBtn").disabled = false;
+      savedTimeEl.textContent = "";
+      timerEl.classList.add("active");
 
-          savedTimeEl.textContent = "";
-          timerEl.classList.add("active");
+      interval = setInterval(() => {
+        const now = new Date();
+        const elapsed = now.getTime() - startTime.getTime();
+        timerEl.textContent = formatTime(elapsed);
+      }, 1000);
+    };
 
-          interval = setInterval(() => {
-            const now = new Date();
-            const elapsed = now.getTime() - startTime.getTime();
-            timerEl.textContent = formatTime(elapsed);
-          }, 1000);
-        };
+    document.getElementById("stopBtn").onclick = () => {
+      if (!startTime) return;
 
-        document.getElementById("stopBtn").onclick = () => {
-          if (!startTime) return;
+      clearInterval(interval);
 
-          clearInterval(interval);
+      const stopTime = new Date();
+      const durationMs = stopTime.getTime() - startTime.getTime();
+      const durationSec = (durationMs / 1000).toFixed(2);
 
-          const stopTime = new Date();
-          const durationMs = stopTime.getTime() - startTime.getTime();
-          const durationSec = (durationMs / 1000).toFixed(2);
+      const name = document.getElementById("name").value;
+      const language = document.getElementById("lang").value;
+      const mode = document.getElementById("modeSelect").value;
 
-          const name = document.getElementById("name").value;
-          const language = document.getElementById("lang").value;
-          const mode = document.getElementById("modeSelect").value;
+      const payload = {
+        startTimestamp: startTime.toISOString(),
+        stopTimestamp: stopTime.toISOString(),
+        language,
+        name,
+        duration: parseFloat(durationSec),
+        mode,
+      };
 
-          const startStr = startTime.toISOString();
-          const stopStr = stopTime.toISOString();
+      fetch(GAS_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-          google.script.run.saveTime(
-            startStr,
-            stopStr,
-            language,
-            name,
-            parseFloat(durationSec),
-            mode
-          );
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = true;
+      timerEl.textContent = "00:00:00";
+      timerEl.classList.remove("active");
 
-          document.getElementById("startBtn").disabled = false;
-          document.getElementById("stopBtn").disabled = true;
-
-          timerEl.textContent = "00:00:00";
-          timerEl.classList.remove("active");
-
-          savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
-          startTime = null;
-        };
-      </script>
-    <? } ?>
-  </body>
+      savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
+      startTime = null;
+    };
+  </script>
+</body>
 </html>
