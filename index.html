@@ -6,8 +6,14 @@
     <script>
       function handleCredentialResponse(response) {
         const id_token = response.credential;
-        google.script.run
-          .withSuccessHandler(function (userData) {
+
+        fetch('https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_token })
+        })
+          .then((res) => res.json())
+          .then((userData) => {
             if (!userData) {
               document.body.innerHTML = "<h2>Access Denied</h2>";
               return;
@@ -18,9 +24,8 @@
             document.querySelector(".container").style.display = "block";
             document.getElementById("auth").style.display = "none";
 
-            initTimer(); // инициализация кнопок после авторизации
-          })
-          .verifyIdToken(id_token);
+            initTimer(); // инициализация логики
+          });
       }
     </script>
     <style>
@@ -83,11 +88,7 @@
       }
 
       toggleThemeBtn.addEventListener("click", () => {
-        if (body.classList.contains("dark")) {
-          setTheme("light");
-        } else {
-          setTheme("dark");
-        }
+        setTheme(body.classList.contains("dark") ? "light" : "dark");
       });
 
       function formatTime(ms) {
@@ -103,7 +104,6 @@
         const savedTimeEl = document.getElementById("savedTime");
         const startBtn = document.getElementById("startBtn");
         const stopBtn = document.getElementById("stopBtn");
-
         let startTime = null;
         let interval = null;
 
@@ -125,7 +125,6 @@
           if (!startTime) return;
 
           clearInterval(interval);
-
           const stopTime = new Date();
           const durationMs = stopTime.getTime() - startTime.getTime();
           const durationSec = (durationMs / 1000).toFixed(2);
@@ -134,17 +133,20 @@
           const language = document.getElementById("lang").value;
           const mode = document.getElementById("modeSelect").value;
 
-          const startStr = startTime.toISOString();
-          const stopStr = stopTime.toISOString();
-
-          google.script.run.saveTime(
-            startStr,
-            stopStr,
-            language,
+          const payload = {
+            start: startTime.toISOString(),
+            stop: stopTime.toISOString(),
             name,
-            parseFloat(durationSec),
+            language,
+            duration: parseFloat(durationSec),
             mode
-          );
+          };
+
+          fetch('https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
 
           startBtn.disabled = false;
           stopBtn.disabled = true;
