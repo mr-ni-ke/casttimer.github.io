@@ -6,27 +6,28 @@
     <script>
       function handleCredentialResponse(response) {
         const id_token = response.credential;
-
-        fetch('https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id_token })
-        })
-          .then((res) => res.json())
-          .then((userData) => {
+        google.script.run
+          .withSuccessHandler((userData) => {
             if (!userData) {
               document.body.innerHTML = "<h2>Access Denied</h2>";
               return;
             }
-
-            document.getElementById("name").value = userData.name;
-            document.getElementById("lang").value = userData.language;
-            document.querySelector(".container").style.display = "block";
-            document.getElementById("auth").style.display = "none";
-
-            initTimer(); // инициализация логики
-          });
+            document.body.innerHTML = `
+              <h2>Welcome, ${userData.name}</h2>
+              <p>Language: ${userData.language}</p>
+            `;
+          })
+          .verifyIdToken(id_token);
       }
+
+      window.onload = () => {
+        google.accounts.id.initialize({
+          client_id: "YOUR_CLIENT_ID.apps.googleusercontent.com",
+          callback: handleCredentialResponse,
+          ux_mode: "popup",
+        });
+        google.accounts.id.prompt();
+      };
     </script>
     <style>
       /* всё как было — без изменений */
