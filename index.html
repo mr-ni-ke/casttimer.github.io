@@ -1,292 +1,197 @@
-<!-- Весь HTML: адаптирован под GitHub Pages -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Cast Timer</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timer App with Google Sign-In</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-     :root {
-        --bg-color: white;
-        --text-color: #222;
-        --input-bg: #fff;
-        --input-border: #ccc;
-        --btn-bg: #007BFF;
-        --btn-bg-hover: #0056b3;
-        --btn-disabled-bg: #555;
-        --timer-color-active: #4CAF50;
-        --timer-color-inactive: inherit;
-      }
-
-      body.dark {
-        --bg-color: #121212;
-        --text-color: #eee;
-        --input-bg: #222;
-        --input-border: #444;
-      }
-
-      body {
-        margin: 0;
-        height: 100vh;
-        width: 100vw;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-family: sans-serif;
-
-        background-image: url("https://staticfiles.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/2560x1440_air_superiority_logo_ed193962ef380686c0f30174866f51d9.jpg");
-        background-repeat: no-repeat;
-        background-size: cover;
-        background-position: center top;
-        background-attachment: fixed;
-
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        transition: background-color 0.3s, color 0.3s;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: -1;
-        }
-
-      body.dark::before {
-        background-color: rgba(0, 0, 0, 0.75);
-      }
-
-      .container {
-        background: var(--bg-color);
-        padding: 30px 40px;
-        border-radius: 10px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        min-width: 300px;
-        max-width: 400px;
-        width: 90vw;
-        box-sizing: border-box;
-        text-align: center;
-        color: var(--text-color);
-        transition: background-color 0.3s, color 0.3s;
-        position: relative;
-      }
-
-      label {
-        font-size: 1.5em;
-        display: block;
-        margin-top: 10px;
-        margin-bottom: 5px;
-      }
-
-      input {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        box-sizing: border-box;
-        border: 0px solid var(--input-border);
-        border-radius: 4px;
-        text-align: center;
-        background: var(--input-bg);
-        color: var(--text-color);
-        font-size: 2em;
-        font-weight: bold;
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-      }
-
-      select {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        box-sizing: border-box;
-        border: 1px solid var(--input-border);
-        border-radius: 4px;
-        text-align: center;
-        background: var(--input-bg);
-        color: var(--text-color);
-        font-size: 1em;
-        text-indent: 10px;
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-      }
-
-      button {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        box-sizing: border-box;
-        border: 1px solid var(--input-border);
-        border-radius: 4px;
-        text-align: center;
-        background: var(--input-bg);
-        color: var(--text-color);
-        font-size: 1em;
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-      }
-
-      button {
-        background-color: var(--btn-bg);
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background-color 0.2s;
-      }
-
-      button:disabled {
-        background-color: var(--btn-disabled-bg);
-        cursor: not-allowed;
-      }
-
-      button:hover:enabled {
-        background-color: var(--btn-bg-hover);
-      }
-
-      #timer {
-        text-align: center;
-        font-size: 2em;
-        font-weight: bold;
-        margin-top: px;
-        color: var(--timer-color-inactive);
-        transition: color 0.3s;
-      }
-
-      #timer.active {
-        color: var(--timer-color-active);
-      }
-
-      #savedTime {
-        font-size: 0.9em;
-        margin-top: 0;
-        min-height: 1.2em;
-        color: #4CAF50;
-        transition: color 0.3s;
-      }
-
-      #toggleThemeBtn {
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          background-color: #444;
-          border-radius: 8px;
-          padding: 2px 6px;
-          width: auto;
-          margin: 0;
-
-      }
-
-      #toggleThemeBtn:hover {
-        background-color: #666;
-      }
+    /* Твои стили (копировать из твоего кода или по желанию) */
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      text-align: center;
+    }
+    input[readonly] {
+      background-color: #eee;
+    }
+    button {
+      margin: 5px;
+      padding: 10px;
+      width: 100%;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #timer {
+      font-size: 2em;
+      margin: 15px 0;
+    }
+    #savedTime {
+      color: green;
+      min-height: 1.2em;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <label>Welcome,</label>
-    <input type="text" id="name" value="None" readonly />
-    <input type="text" id="lang" value="None" hidden readonly />
 
-    <label>You are MC or CC today?</label>
-    <select id="modeSelect">
-      <option value="MC">MC</option>
-      <option value="CC">CC</option>
-    </select>
-
-    <button id="startBtn">Start</button>
-    <button id="stopBtn" disabled>Stop</button>
-
-    <p id="timer">00:00:00</p>
-    <p id="savedTime"></p>
-    <button id="toggleThemeBtn">Switch to Dark</button>
+<div class="container" id="signinDiv">
+  <div id="g_id_onload"
+       data-client_id="619365294529-aq28ud62bftedigk08olqfdsfmjaae32.apps.googleusercontent.com"
+       data-auto_prompt="false"
+       data-callback="handleCredentialResponse">
   </div>
+  <div class="g_id_signin"
+       data-type="standard"
+       data-size="large"
+       data-theme="outline"
+       data-text="signin_with"
+       data-shape="rectangular"
+       data-logo_alignment="left">
+  </div>
+</div>
 
-  <script>
-    const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwICu4aWpfQgjpc5vNrVLmUZ3aLjTOqeXsqGQ_NXet0PEyY_gLHEUD2Henn2HfwCkn_Wg/exec';
+<div class="container" id="appDiv" style="display:none;">
+  <label>Welcome, <input type="text" id="name" readonly /></label>
+  <input type="hidden" id="lang" />
+  <label>You are MC or CC today?</label>
+  <select id="modeSelect">
+    <option value="MC">MC</option>
+    <option value="CC">CC</option>
+  </select>
+  <button id="startBtn">Start</button>
+  <button id="stopBtn" disabled>Stop</button>
+  <p id="timer">00:00:00</p>
+  <p id="savedTime"></p>
+  <button id="signOutBtn">Sign Out</button>
+</div>
 
-    const body = document.body;
-    const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+<script>
+  let idToken = null;
+  let userEmail = null;
+  let userName = "";
+  let userLang = "";
 
-    function setTheme(theme) {
-      if (theme === "dark") {
-        body.classList.add("dark");
-        toggleThemeBtn.textContent = "L";
-      } else {
-        body.classList.remove("dark");
-        toggleThemeBtn.textContent = "D";
-      }
-      localStorage.setItem("theme", theme);
-    }
+  function handleCredentialResponse(response) {
+    idToken = response.credential;
+    // Отправляем id_token на backend, чтобы получить данные пользователя
+    fetch("https://script.google.com/macros/s/ВАШ_ДЕПЛОЙ_ID/exec", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_token: idToken }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          alert("Access denied or error: " + data.error);
+          return;
+        }
+        userName = data.name;
+        userLang = data.language;
 
-    const savedTheme = localStorage.getItem("theme");
-    setTheme(savedTheme || "light");
+        // Скрываем окно входа, показываем интерфейс
+        document.getElementById("signinDiv").style.display = "none";
+        document.getElementById("appDiv").style.display = "block";
 
-    toggleThemeBtn.addEventListener("click", () => {
-      setTheme(body.classList.contains("dark") ? "light" : "dark");
-    });
+        document.getElementById("name").value = userName;
+        document.getElementById("lang").value = userLang;
+      })
+      .catch((err) => {
+        alert("Ошибка связи с сервером: " + err.message);
+      });
+  }
 
-    let startTime = null;
-    let interval = null;
+  // Логика таймера
+  let startTime = null;
+  let interval = null;
 
-    const timerEl = document.getElementById("timer");
-    const savedTimeEl = document.getElementById("savedTime");
+  function formatTime(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+    const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+    const secs = String(totalSec % 60).padStart(2, "0");
+    return `${hrs}:${mins}:${secs}`;
+  }
 
-    function formatTime(ms) {
-      const totalSec = Math.floor(ms / 1000);
-      const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
-      const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
-      const secs = String(totalSec % 60).padStart(2, "0");
-      return `${hrs}:${mins}:${secs}`;
-    }
+  const timerEl = document.getElementById("timer");
+  const savedTimeEl = document.getElementById("savedTime");
 
-    document.getElementById("startBtn").onclick = () => {
-      startTime = new Date();
-      document.getElementById("startBtn").disabled = true;
-      document.getElementById("stopBtn").disabled = false;
-      savedTimeEl.textContent = "";
-      timerEl.classList.add("active");
+  document.getElementById("startBtn").onclick = () => {
+    startTime = new Date();
+    document.getElementById("startBtn").disabled = true;
+    document.getElementById("stopBtn").disabled = false;
 
-      interval = setInterval(() => {
-        const now = new Date();
-        const elapsed = now.getTime() - startTime.getTime();
-        timerEl.textContent = formatTime(elapsed);
-      }, 1000);
-    };
+    savedTimeEl.textContent = "";
+    timerEl.classList.add("active");
 
-    document.getElementById("stopBtn").onclick = () => {
-      if (!startTime) return;
+    interval = setInterval(() => {
+      const now = new Date();
+      const elapsed = now.getTime() - startTime.getTime();
+      timerEl.textContent = formatTime(elapsed);
+    }, 1000);
+  };
 
-      clearInterval(interval);
+  document.getElementById("stopBtn").onclick = () => {
+    if (!startTime) return;
 
-      const stopTime = new Date();
-      const durationMs = stopTime.getTime() - startTime.getTime();
-      const durationSec = (durationMs / 1000).toFixed(2);
+    clearInterval(interval);
 
-      const name = document.getElementById("name").value;
-      const language = document.getElementById("lang").value;
-      const mode = document.getElementById("modeSelect").value;
+    const stopTime = new Date();
+    const durationMs = stopTime.getTime() - startTime.getTime();
+    const durationSec = (durationMs / 1000).toFixed(2);
 
-      const payload = {
+    const mode = document.getElementById("modeSelect").value;
+
+    // Отправляем данные на backend для сохранения
+    fetch("https://script.google.com/macros/s/ВАШ_ДЕПЛОЙ_ID/exec", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id_token: idToken,
+        action: "saveTime",
         startTimestamp: startTime.toISOString(),
         stopTimestamp: stopTime.toISOString(),
-        language,
-        name,
         duration: parseFloat(durationSec),
-        mode,
-      };
-
-      fetch(GAS_ENDPOINT, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        mode: mode,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          alert("Ошибка при сохранении: " + data.error);
+          return;
+        }
+        savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
+      })
+      .catch((err) => {
+        alert("Ошибка связи с сервером: " + err.message);
       });
 
-      document.getElementById("startBtn").disabled = false;
-      document.getElementById("stopBtn").disabled = true;
-      timerEl.textContent = "00:00:00";
-      timerEl.classList.remove("active");
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("stopBtn").disabled = true;
 
-      savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
-      startTime = null;
-    };
-  </script>
+    timerEl.textContent = "00:00:00";
+    timerEl.classList.remove("active");
+
+    startTime = null;
+  };
+
+  // Кнопка выхода (деавторизация)
+  document.getElementById("signOutBtn").onclick = () => {
+    google.accounts.id.disableAutoSelect();
+    idToken = null;
+    userName = "";
+    userLang = "";
+    startTime = null;
+    clearInterval(interval);
+
+    document.getElementById("signinDiv").style.display = "block";
+    document.getElementById("appDiv").style.display = "none";
+  };
+</script>
+
 </body>
 </html>
