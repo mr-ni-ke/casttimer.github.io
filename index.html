@@ -1,75 +1,109 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <base target="_top" />
-    <meta name="google-signin-client_id" content="619365294529-aq28ud62bftedigk08olqfdsfmjaae32.apps.googleusercontent.com" />
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <style>
-      :root {
-        --bg-color: white;
-        --text-color: #222;
-        --input-border: #ccc;
-      }
+<head>
+  <title>Timer Page</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #info, #controls { display: none; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div id="g_id_onload"
+       data-client_id="619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false">
+  </div>
+  <div class="g_id_signin"
+       data-type="standard"
+       data-size="large"
+       data-theme="outline"
+       data-text="sign_in_with"
+       data-shape="rectangular"
+       data-logo_alignment="left">
+  </div>
 
-      body {
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        font-family: sans-serif;
-        margin: 0;
-        padding: 2rem;
-      }
+  <div id="info"></div>
 
-      input, button {
-        border: 1px solid var(--input-border);
-        padding: 0.5rem;
-        font-size: 1rem;
-      }
+  <div id="controls">
+    <label>
+      <input type="radio" name="mode" value="MC" checked /> MC
+    </label>
+    <label>
+      <input type="radio" name="mode" value="CC" /> CC
+    </label>
+    <br><br>
+    <button id="startBtn">Start</button>
+    <button id="stopBtn" disabled>Stop</button>
+    <p>Elapsed time: <span id="timer">0</span> sec</p>
+  </div>
 
-      .hidden {
-        display: none;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="login" style="margin-bottom: 2rem;"></div>
+  <script>
+    let idToken = null;
+    let startTime = null;
+    let timerInterval = null;
+    let emailMap = {
+      "example1@gmail.com": { name: "User1", language: "EN" },
+      "example2@gmail.com": { name: "User2", language: "RU" }
+    };
+    let currentUser = {};
 
-    <div id="app" class="hidden">
-      <h1>Добро пожаловать, <span id="user-name"></span></h1>
-      <p>Язык: <span id="user-lang"></span></p>
-      <!-- Твой основной функционал -->
-    </div>
+    function handleCredentialResponse(response) {
+      idToken = response.credential;
+      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec', {
+        method: 'POST',
+        body: JSON.stringify({ id_token: idToken }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(r => r.json())
+      .then(user => {
+        if (!user.email || !emailMap[user.email]) {
+          document.getElementById("info").innerText = "Access denied.";
+          return;
+        }
+        currentUser = {
+          ...emailMap[user.email],
+          email: user.email
+        };
+        document.getElementById("info").innerText =
+          `Name: ${currentUser.name}, Language: ${currentUser.language}`;
+        document.getElementById("info").style.display = "block";
+        document.getElementById("controls").style.display = "block";
+      });
+    }
 
-    <script>
-      window.onload = function () {
-        google.accounts.id.initialize({
-          client_id: "619365294529-aq28ud62bftedigk08olqfdsfmjaae32.apps.googleusercontent.com",
-          callback: handleCredentialResponse,
-          auto_select: false,
-        });
+    document.getElementById("startBtn").onclick = () => {
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById("timer").innerText = elapsed;
+      }, 1000);
+      document.getElementById("startBtn").disabled = true;
+      document.getElementById("stopBtn").disabled = false;
+    };
 
-        google.accounts.id.prompt();
-      };
+    document.getElementById("stopBtn").onclick = () => {
+      clearInterval(timerInterval);
+      const stopTime = Date.now();
+      const duration = Math.floor((stopTime - startTime) / 1000);
+      const mode = document.querySelector('input[name="mode"]:checked').value;
 
-      function handleCredentialResponse(response) {
-        const id_token = response.credential;
+      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec', {
+        method: 'POST',
+        body: JSON.stringify({
+          id_token: idToken,
+          action: "log",
+          start: new Date(startTime).toISOString(),
+          stop: new Date(stopTime).toISOString(),
+          duration,
+          mode
+        }),
+        headers: { 'Content-Type': 'application/json' }
+      });
 
-        fetch("https://script.google.com/macros/s/AKfycbwICu4aWpfQgjpc5vNrVLmUZ3aLjTOqeXsqGQ_NXet0PEyY_gLHEUD2Henn2HfwCkn_Wg/exec", {
-          method: "POST",
-          mode: "no-cors", // вынуждено из-за ограничений CORS
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id_token }),
-        });
-
-        // Предварительно отображаем интерфейс (без проверки, т.к. из-за `no-cors` мы не получим ответ)
-        document.getElementById("login").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
-
-        // Временно отображаем фиктивные данные (если хочешь — убери)
-        document.getElementById("user-name").innerText = "Пользователь";
-        document.getElementById("user-lang").innerText = "RU";
-      }
-    </script>
-  </body>
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = true;
+    };
+  </script>
+</body>
 </html>
