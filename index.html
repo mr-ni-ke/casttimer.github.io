@@ -41,7 +41,7 @@
     function handleCredentialResponse(response) {
       const id_token = response.credential;
 
-      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec?endpoint=verify' + encodeURIComponent(window.location.origin), {
+      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec?endpoint=verify&origin=' + encodeURIComponent(window.location.origin), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token })
@@ -93,7 +93,7 @@
         duration: durationSec
       };
 
-      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec?endpoint=log', {
+      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec?endpoint=log&origin=' + encodeURIComponent(window.location.origin), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
