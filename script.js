@@ -31,7 +31,7 @@ let startTime, interval;
 
 function handleCredentialResponse(response) {
   const id_token = response.credential;
-  fetch('https://script.google.com/macros/s/YOUR_DEPLOY_ID/exec', {
+  fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({id_token})
@@ -69,8 +69,7 @@ function initTimer({lang, name}) {
     const stopTime = Date.now();
     const duration = ((stopTime - startTime) / 1000).toFixed(2);
 
-    // сохраняем через Apps Script
-    fetch('https://script.google.com/macros/s/YOUR_DEPLOY_ID/exec', {
+    fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
