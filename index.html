@@ -8,10 +8,6 @@
   <body>
     <h2>Авторизация через Google</h2>
 
-    <form id="authForm" method="POST" action="https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec">
-      <input type="hidden" name="id_token" id="id_token" />
-    </form>
-
     <div id="g_id_onload"
          data-client_id="619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com"
          data-callback="handleCredentialResponse"
@@ -27,10 +23,85 @@
          data-logo_alignment="left">
     </div>
 
+    <div id="app" style="display: none;">
+      <p>Welcome, <span id="userName"></span> (<span id="userLang"></span>)</p>
+      <select id="modeSelect">
+        <option value="DEFAULT">DEFAULT</option>
+        <option value="TEST">TEST</option>
+      </select>
+      <div id="timer">00:00:00</div>
+      <button id="startBtn">Start</button>
+      <button id="stopBtn" disabled>Stop</button>
+      <div id="savedTime"></div>
+    </div>
+
     <script>
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec";
+
+      let startTime, interval;
+
       function handleCredentialResponse(response) {
-        document.getElementById('id_token').value = response.credential;
-        document.getElementById('authForm').submit();
+        const id_token = response.credential;
+        fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({id_token})
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            alert('Access denied');
+            return;
+          }
+          const ud = data.userData;
+          document.getElementById('userName').textContent = ud.name;
+          document.getElementById('userLang').textContent = ud.language;
+          document.getElementById('app').style.display = '';
+          initTimer(ud);
+        });
+      }
+
+      function initTimer({language, name}) {
+        const timerEl = document.getElementById('timer');
+        const savedEl = document.getElementById('savedTime');
+
+        document.getElementById('startBtn').onclick = () => {
+          startTime = Date.now();
+          document.getElementById('startBtn').disabled = true;
+          document.getElementById('stopBtn').disabled = false;
+          timerEl.classList.add('active');
+          savedEl.textContent = '';
+          interval = setInterval(() => {
+            const diff = Date.now() - startTime;
+            timerEl.textContent = new Date(diff).toISOString().substr(11, 8);
+          }, 1000);
+        };
+
+        document.getElementById('stopBtn').onclick = () => {
+          clearInterval(interval);
+          const stopTime = Date.now();
+          const duration = ((stopTime - startTime) / 1000).toFixed(2);
+
+          fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              action: 'save',
+              start: new Date(startTime).toISOString(),
+              stop: new Date(stopTime).toISOString(),
+              lang: language,
+              name,
+              duration: parseFloat(duration),
+              mode: document.getElementById('modeSelect').value
+            })
+          });
+
+          document.getElementById('startBtn').disabled = false;
+          document.getElementById('stopBtn').disabled = true;
+          timerEl.textContent = '00:00:00';
+          timerEl.classList.remove('active');
+          savedEl.textContent = `Saved: ${new Date(stopTime - startTime).toISOString().substr(11,8)}`;
+        };
       }
     </script>
   </body>
