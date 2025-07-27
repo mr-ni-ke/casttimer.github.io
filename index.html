@@ -1,197 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Timer App with Google Sign-In</title>
+  <meta charset="utf-8" />
+  <title>Timer App</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <style>
-    /* Твои стили (копировать из твоего кода или по желанию) */
-    body {
-      font-family: sans-serif;
-      margin: 20px;
-    }
-    .container {
-      max-width: 400px;
-      margin: auto;
-      text-align: center;
-    }
-    input[readonly] {
-      background-color: #eee;
-    }
-    button {
-      margin: 5px;
-      padding: 10px;
-      width: 100%;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #timer {
-      font-size: 2em;
-      margin: 15px 0;
-    }
-    #savedTime {
-      color: green;
-      min-height: 1.2em;
-    }
-  </style>
+  <script src="script.js"></script>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-<div class="container" id="signinDiv">
   <div id="g_id_onload"
-       data-client_id="619365294529-aq28ud62bftedigk08olqfdsfmjaae32.apps.googleusercontent.com"
-       data-auto_prompt="false"
+       data-client_id="YOUR_OAUTH_CLIENT_ID"
        data-callback="handleCredentialResponse">
   </div>
-  <div class="g_id_signin"
-       data-type="standard"
-       data-size="large"
-       data-theme="outline"
-       data-text="signin_with"
-       data-shape="rectangular"
-       data-logo_alignment="left">
+  <div id="g_id_signin"></div>
+
+  <div class="container" style="display:none;" id="app">
+    <p>Welcome, <span id="userName"></span> (<span id="userLang"></span>)</p>
+
+    <label>You are MC or CC today?</label>
+    <select id="modeSelect">
+      <option value="MC">MC</option>
+      <option value="CC">CC</option>
+    </select>
+    <button id="startBtn">Start</button>
+    <button id="stopBtn" disabled>Stop</button>
+
+    <p id="timer">00:00:00</p>
+    <p id="savedTime"></p>
   </div>
-</div>
-
-<div class="container" id="appDiv" style="display:none;">
-  <label>Welcome, <input type="text" id="name" readonly /></label>
-  <input type="hidden" id="lang" />
-  <label>You are MC or CC today?</label>
-  <select id="modeSelect">
-    <option value="MC">MC</option>
-    <option value="CC">CC</option>
-  </select>
-  <button id="startBtn">Start</button>
-  <button id="stopBtn" disabled>Stop</button>
-  <p id="timer">00:00:00</p>
-  <p id="savedTime"></p>
-  <button id="signOutBtn">Sign Out</button>
-</div>
-
-<script>
-  let idToken = null;
-  let userEmail = null;
-  let userName = "";
-  let userLang = "";
-
-  function handleCredentialResponse(response) {
-    idToken = response.credential;
-    // Отправляем id_token на backend, чтобы получить данные пользователя
-    fetch("https://script.google.com/macros/s/ВАШ_ДЕПЛОЙ_ID/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_token: idToken }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) {
-          alert("Access denied or error: " + data.error);
-          return;
-        }
-        userName = data.name;
-        userLang = data.language;
-
-        // Скрываем окно входа, показываем интерфейс
-        document.getElementById("signinDiv").style.display = "none";
-        document.getElementById("appDiv").style.display = "block";
-
-        document.getElementById("name").value = userName;
-        document.getElementById("lang").value = userLang;
-      })
-      .catch((err) => {
-        alert("Ошибка связи с сервером: " + err.message);
-      });
-  }
-
-  // Логика таймера
-  let startTime = null;
-  let interval = null;
-
-  function formatTime(ms) {
-    const totalSec = Math.floor(ms / 1000);
-    const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
-    const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
-    const secs = String(totalSec % 60).padStart(2, "0");
-    return `${hrs}:${mins}:${secs}`;
-  }
-
-  const timerEl = document.getElementById("timer");
-  const savedTimeEl = document.getElementById("savedTime");
-
-  document.getElementById("startBtn").onclick = () => {
-    startTime = new Date();
-    document.getElementById("startBtn").disabled = true;
-    document.getElementById("stopBtn").disabled = false;
-
-    savedTimeEl.textContent = "";
-    timerEl.classList.add("active");
-
-    interval = setInterval(() => {
-      const now = new Date();
-      const elapsed = now.getTime() - startTime.getTime();
-      timerEl.textContent = formatTime(elapsed);
-    }, 1000);
-  };
-
-  document.getElementById("stopBtn").onclick = () => {
-    if (!startTime) return;
-
-    clearInterval(interval);
-
-    const stopTime = new Date();
-    const durationMs = stopTime.getTime() - startTime.getTime();
-    const durationSec = (durationMs / 1000).toFixed(2);
-
-    const mode = document.getElementById("modeSelect").value;
-
-    // Отправляем данные на backend для сохранения
-    fetch("https://script.google.com/macros/s/AKfycbwICu4aWpfQgjpc5vNrVLmUZ3aLjTOqeXsqGQ_NXet0PEyY_gLHEUD2Henn2HfwCkn_Wg/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id_token: idToken,
-        action: "saveTime",
-        startTimestamp: startTime.toISOString(),
-        stopTimestamp: stopTime.toISOString(),
-        duration: parseFloat(durationSec),
-        mode: mode,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) {
-          alert("Ошибка при сохранении: " + data.error);
-          return;
-        }
-        savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
-      })
-      .catch((err) => {
-        alert("Ошибка связи с сервером: " + err.message);
-      });
-
-    document.getElementById("startBtn").disabled = false;
-    document.getElementById("stopBtn").disabled = true;
-
-    timerEl.textContent = "00:00:00";
-    timerEl.classList.remove("active");
-
-    startTime = null;
-  };
-
-  // Кнопка выхода (деавторизация)
-  document.getElementById("signOutBtn").onclick = () => {
-    google.accounts.id.disableAutoSelect();
-    idToken = null;
-    userName = "";
-    userLang = "";
-    startTime = null;
-    clearInterval(interval);
-
-    document.getElementById("signinDiv").style.display = "block";
-    document.getElementById("appDiv").style.display = "none";
-  };
-</script>
-
 </body>
 </html>
