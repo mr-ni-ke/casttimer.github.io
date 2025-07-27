@@ -1,32 +1,37 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <title>Timer App</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="script.js"></script>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div id="g_id_onload"
-       data-client_id="619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com"
-       data-callback="handleCredentialResponse">
-  </div>
-  <div id="g_id_signin"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Google Auth</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+  <body>
+    <h2>Авторизация через Google</h2>
 
-  <div class="container" style="display:none;" id="app">
-    <p>Welcome, <span id="userName"></span> (<span id="userLang"></span>)</p>
+    <form id="authForm" method="POST" action="https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec">
+      <input type="hidden" name="id_token" id="id_token" />
+    </form>
 
-    <label>You are MC or CC today?</label>
-    <select id="modeSelect">
-      <option value="MC">MC</option>
-      <option value="CC">CC</option>
-    </select>
-    <button id="startBtn">Start</button>
-    <button id="stopBtn" disabled>Stop</button>
+    <div id="g_id_onload"
+         data-client_id="619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="true">
+    </div>
 
-    <p id="timer">00:00:00</p>
-    <p id="savedTime"></p>
-  </div>
-</body>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
+
+    <script>
+      function handleCredentialResponse(response) {
+        document.getElementById('id_token').value = response.credential;
+        document.getElementById('authForm').submit();
+      }
+    </script>
+  </body>
 </html>
