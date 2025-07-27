@@ -1,109 +1,113 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Timer Page</title>
+  <meta charset="UTF-8" />
+  <title>Cast Timer</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #info, #controls { display: none; margin-top: 20px; }
+    body { font-family: Arial; padding: 2em; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <div id="g_id_onload"
-       data-client_id="619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com"
-       data-callback="handleCredentialResponse"
-       data-auto_prompt="false">
-  </div>
-  <div class="g_id_signin"
-       data-type="standard"
-       data-size="large"
-       data-theme="outline"
-       data-text="sign_in_with"
-       data-shape="rectangular"
-       data-logo_alignment="left">
+       data-client_id="
+619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com"
+       data-context="signin"
+       data-auto_prompt="false"
+       data-callback="handleCredentialResponse">
   </div>
 
-  <div id="info"></div>
+  <div class="g_id_signin" data-type="standard"></div>
 
-  <div id="controls">
-    <label>
-      <input type="radio" name="mode" value="MC" checked /> MC
-    </label>
-    <label>
-      <input type="radio" name="mode" value="CC" /> CC
-    </label>
-    <br><br>
+  <div id="app" class="hidden">
+    <h2 id="welcome"></h2>
+    <p>Language: <span id="lang"></span></p>
+
+    <select id="taskSelect">
+      <option value="MC">MC</option>
+      <option value="CC">CC</option>
+    </select>
+
     <button id="startBtn">Start</button>
-    <button id="stopBtn" disabled>Stop</button>
-    <p>Elapsed time: <span id="timer">0</span> sec</p>
+    <button id="stopBtn" class="hidden">Stop</button>
+    <p id="timer">00:00:00</p>
   </div>
 
   <script>
-    let idToken = null;
+    let userData = {};
     let startTime = null;
     let timerInterval = null;
-    let emailMap = {
-      "example1@gmail.com": { name: "User1", language: "EN" },
-      "example2@gmail.com": { name: "User2", language: "RU" }
-    };
-    let currentUser = {};
 
     function handleCredentialResponse(response) {
-      idToken = response.credential;
-      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec', {
+      const id_token = response.credential;
+
+      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec/verify', {
         method: 'POST',
-        body: JSON.stringify({ id_token: idToken }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_token })
       })
-      .then(r => r.json())
-      .then(user => {
-        if (!user.email || !emailMap[user.email]) {
-          document.getElementById("info").innerText = "Access denied.";
+      .then(res => res.json())
+      .then(data => {
+        if (!data || !data.name) {
+          alert('Access denied');
           return;
         }
-        currentUser = {
-          ...emailMap[user.email],
-          email: user.email
-        };
-        document.getElementById("info").innerText =
-          `Name: ${currentUser.name}, Language: ${currentUser.language}`;
-        document.getElementById("info").style.display = "block";
-        document.getElementById("controls").style.display = "block";
+        userData = data;
+        document.getElementById('welcome').textContent = `Welcome, ${data.name}`;
+        document.getElementById('lang').textContent = data.lang;
+        document.querySelector('.g_id_signin').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+      })
+      .catch(err => {
+        console.error('Verification failed', err);
       });
     }
 
-    document.getElementById("startBtn").onclick = () => {
-      startTime = Date.now();
+    document.getElementById('startBtn').addEventListener('click', () => {
+      startTime = new Date();
+      document.getElementById('startBtn').classList.add('hidden');
+      document.getElementById('stopBtn').classList.remove('hidden');
       timerInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        document.getElementById("timer").innerText = elapsed;
+        const now = new Date();
+        const diff = new Date(now - startTime);
+        const h = String(diff.getUTCHours()).padStart(2, '0');
+        const m = String(diff.getUTCMinutes()).padStart(2, '0');
+        const s = String(diff.getUTCSeconds()).padStart(2, '0');
+        document.getElementById('timer').textContent = `${h}:${m}:${s}`;
       }, 1000);
-      document.getElementById("startBtn").disabled = true;
-      document.getElementById("stopBtn").disabled = false;
-    };
+    });
 
-    document.getElementById("stopBtn").onclick = () => {
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      const endTime = new Date();
       clearInterval(timerInterval);
-      const stopTime = Date.now();
-      const duration = Math.floor((stopTime - startTime) / 1000);
-      const mode = document.querySelector('input[name="mode"]:checked').value;
 
-      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec', {
+      const durationMs = endTime - startTime;
+      const durationSec = Math.floor(durationMs / 1000);
+
+      const payload = {
+        name: userData.name,
+        lang: userData.lang,
+        task: document.getElementById('taskSelect').value,
+        start: startTime.toISOString(),
+        end: endTime.toISOString(),
+        duration: durationSec
+      };
+
+      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec/log', {
         method: 'POST',
-        body: JSON.stringify({
-          id_token: idToken,
-          action: "log",
-          start: new Date(startTime).toISOString(),
-          stop: new Date(stopTime).toISOString(),
-          duration,
-          mode
-        }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        alert('Saved!');
+      }).catch(err => {
+        alert('Save failed');
+        console.error(err);
       });
 
-      document.getElementById("startBtn").disabled = false;
-      document.getElementById("stopBtn").disabled = true;
-    };
+      document.getElementById('startBtn').classList.remove('hidden');
+      document.getElementById('stopBtn').classList.add('hidden');
+    });
   </script>
 </body>
 </html>
