@@ -1,104 +1,328 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Timer App</title>
+  <meta charset="utf-8">
+  <title>Cast time</title>
+  <style>
+    :root {
+        --bg-color: white;
+        --text-color: #222;
+        --input-bg: #fff;
+        --input-border: #ccc;
+        --btn-bg: #007BFF;
+        --btn-bg-hover: #0056b3;
+        --btn-disabled-bg: #555;
+        --timer-color-active: #4CAF50;
+        --timer-color-inactive: inherit;
+      }
+
+      body.dark {
+        --bg-color: #121212;
+        --text-color: #eee;
+        --input-bg: #222;
+        --input-border: #444;
+      }
+
+      body {
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: sans-serif;
+
+        background-image: url("https://staticfiles.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/2560x1440_air_superiority_logo_ed193962ef380686c0f30174866f51d9.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center top;
+        background-attachment: fixed;
+
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+        }
+
+      body.dark::before {
+        background-color: rgba(0, 0, 0, 0.75);
+      }
+
+      .container {
+        background: var(--bg-color);
+        padding: 30px 40px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        min-width: 300px;
+        max-width: 400px;
+        width: 90vw;
+        box-sizing: border-box;
+        text-align: center;
+        color: var(--text-color);
+        transition: background-color 0.3s, color 0.3s;
+        position: relative;
+      }
+
+      label {
+        font-size: 1.5em;
+        display: block;
+        margin-top: 10px;
+        margin-bottom: 5px;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 0px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 2em;
+        font-weight: bold;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1em;
+        text-indent: 10px;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      button {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1em;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      button {
+        background-color: var(--btn-bg);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s;
+      }
+
+      button:disabled {
+        background-color: var(--btn-disabled-bg);
+        cursor: not-allowed;
+      }
+
+      button:hover:enabled {
+        background-color: var(--btn-bg-hover);
+      }
+
+      #timer {
+        text-align: center;
+        font-size: 2em;
+        font-weight: bold;
+        margin-top: px;
+        color: var(--timer-color-inactive);
+        transition: color 0.3s;
+      }
+
+      #timer.active {
+        color: var(--timer-color-active);
+      }
+
+      #savedTime {
+        font-size: 0.9em;
+        margin-top: 0;
+        min-height: 1.2em;
+        color: #4CAF50;
+        transition: color 0.3s;
+      }
+
+      #toggleThemeBtn {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          background-color: #444;
+          border-radius: 8px;
+          padding: 2px 6px;
+          width: auto;
+          margin: 0;
+
+      }
+
+      #toggleThemeBtn:hover {
+        background-color: #666;
+      }
+  </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+  <div class="container">
+    <div id="g_id_signin"></div>
+    <label id="welcomeLabel" style="display:none;">Welcome,</label>
+    <input type="text" id="name" readonly style="display:none"/>
+    <input type="text" id="lang" readonly hidden/>
 
-  <div id="g_id_onload"
-       data-client_id="619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com"
-       data-callback="handleCredentialResponse"
-       data-auto_prompt="true">
-  </div>
-  <div id="g_id_signin"></div>
-
-  <div class="container" style="display:none;" id="app">
-    <p>Welcome, <span id="userName"></span> (<span id="userLang"></span>)</p>
-
-    <label>You are MC or CC today?</label>
-    <select id="modeSelect">
+    <label id="modeLabel" style="display:none;">You are MC or CC today?</label>
+    <select id="modeSelect" style="display:none;">
       <option value="MC">MC</option>
       <option value="CC">CC</option>
     </select>
-    <button id="startBtn">Start</button>
+
+    <button id="startBtn" disabled>Start</button>
     <button id="stopBtn" disabled>Stop</button>
 
     <p id="timer">00:00:00</p>
     <p id="savedTime"></p>
+
+    <button id="toggleThemeBtn">Switch to Dark</button>
   </div>
 
 <script>
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec';
+const backendUrl = 'https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec';
 
-  let startTime, interval;
+let user = null;
 
-  function handleCredentialResponse(response) {
-    const id_token = response.credential;
-    fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ id_token })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success) {
-        alert('Access denied');
-        return;
-      }
-      const ud = data.userData;
-      document.getElementById('userName').textContent = ud.name;
-      document.getElementById('userLang').textContent = ud.language;
-      document.getElementById('app').style.display = 'block';
-      initTimer(ud);
-    })
-    .catch(err => {
-      alert('Error: ' + err.message);
-    });
+window.onload = () => {
+  google.accounts.id.initialize({
+    client_id: '619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com',
+    callback: handleCredentialResponse
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('g_id_signin'),
+    { theme: 'outline', size: 'large' }
+  );
+};
+
+function handleCredentialResponse(response) {
+  fetch(backendUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_token: response.credential })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+    user = data;
+    afterLogin();
+  })
+  .catch(e => alert('Network/error: '+e));
+}
+
+function afterLogin() {
+  document.getElementById('g_id_signin').style.display = 'none';
+  document.getElementById('welcomeLabel').style.display = '';
+  document.getElementById('name').style.display = '';
+  document.getElementById('modeLabel').style.display = '';
+  document.getElementById('modeSelect').style.display = '';
+
+  document.getElementById('name').value = user.name;
+  document.getElementById('lang').value = user.language;
+  document.getElementById('startBtn').disabled = false;
+}
+
+// Сюда ваш таймер‑код без изменений
+const body = document.body;
+const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+function setTheme(theme) {
+  if (theme === "dark") {
+    body.classList.add("dark");
+    toggleThemeBtn.textContent = "L";
+  } else {
+    body.classList.remove("dark");
+    toggleThemeBtn.textContent = "D";
   }
+  localStorage.setItem("theme", theme);
+}
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme) setTheme(savedTheme);
+else setTheme("light");
+toggleThemeBtn.addEventListener("click", () => {
+  setTheme(body.classList.contains("dark") ? "light" : "dark");
+});
 
-  function initTimer({language, name}) {
-    const timerEl = document.getElementById('timer');
-    const savedEl = document.getElementById('savedTime');
-    document.getElementById('startBtn').onclick = () => {
-      startTime = Date.now();
-      document.getElementById('startBtn').disabled = true;
-      document.getElementById('stopBtn').disabled = false;
-      timerEl.classList.add('active');
-      savedEl.textContent = '';
-      interval = setInterval(() => {
-        const diff = Date.now() - startTime;
-        timerEl.textContent = new Date(diff).toISOString().substr(11, 8);
-      }, 1000);
-    };
-    document.getElementById('stopBtn').onclick = () => {
-      clearInterval(interval);
-      const stopTime = Date.now();
-      const duration = ((stopTime - startTime) / 1000).toFixed(2);
+let startTime = null, interval = null;
+function formatTime(ms) {
+  const totalSec = Math.floor(ms/1000);
+  const hrs = String(Math.floor(totalSec/3600)).padStart(2,"0");
+  const mins = String(Math.floor((totalSec%3600)/60)).padStart(2,"0");
+  const secs = String(totalSec%60).padStart(2,"0");
+  return `${hrs}:${mins}:${secs}`;
+}
+const timerEl = document.getElementById("timer");
+const savedTimeEl = document.getElementById("savedTime");
 
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          action: 'save',
-          start: new Date(startTime).toISOString(),
-          stop: new Date(stopTime).toISOString(),
-          language,
-          name,
-          duration: parseFloat(duration),
-          mode: document.getElementById('modeSelect').value
-        })
-      });
+document.getElementById("startBtn").onclick = () => {
+  startTime = new Date();
+  document.getElementById("startBtn").disabled = true;
+  document.getElementById("stopBtn").disabled = false;
+  savedTimeEl.textContent = "";
+  timerEl.classList.add("active");
+  interval = setInterval(() => {
+    timerEl.textContent = formatTime(new Date().getTime() - startTime.getTime());
+  }, 1000);
+};
 
-      document.getElementById('startBtn').disabled = false;
-      document.getElementById('stopBtn').disabled = true;
-      timerEl.textContent = '00:00:00';
-      timerEl.classList.remove('active');
-      savedEl.textContent = `Saved: ${new Date(stopTime - startTime).toISOString().substr(11,8)}`;
-    };
-  }
+document.getElementById("stopBtn").onclick = () => {
+  if (!startTime) return;
+  clearInterval(interval);
+  const stopTime = new Date();
+  const durationMs = stopTime - startTime;
+  const durationSec = (durationMs/1000).toFixed(2);
+  const mode = document.getElementById("modeSelect").value;
+  fetch(backendUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      save: true,
+      id_token: null,
+      start: startTime.toISOString(),
+      stop: stopTime.toISOString(),
+      duration: parseFloat(durationSec),
+      language: user.language,
+      name: user.name,
+      mode: mode
+    })
+  })
+  .then(r => r.json())
+  .then(resp => {
+    if (resp.error) alert(resp.error);
+    else {
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("stopBtn").disabled = true;
+      timerEl.textContent = "00:00:00";
+      timerEl.classList.remove("active");
+      savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
+      startTime = null;
+    }
+  })
+  .catch(e => alert('Network save error: '+e));
+};
 </script>
-
 </body>
 </html>
