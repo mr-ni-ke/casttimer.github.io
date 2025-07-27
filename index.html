@@ -42,7 +42,7 @@
     function handleCredentialResponse(response) {
       const id_token = response.credential;
 
-      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec/verify', {
+      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec?endpoint=verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_token })
@@ -94,7 +94,7 @@
         duration: durationSec
       };
 
-      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec/log', {
+      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec?endpoint=log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
