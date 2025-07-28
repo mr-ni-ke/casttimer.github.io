@@ -1,112 +1,295 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Cast Timer</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <style>
-    body { font-family: Arial; padding: 2em; }
-    .hidden { display: none; }
-  </style>
-</head>
-<body>
-  <div id="g_id_onload"
-       data-client_id="619365294529-8hf03vg6qev82netv9ot7a80e8kic98q.apps.googleusercontent.com"
-       data-context="signin"
-       data-auto_prompt="false"
-       data-callback="handleCredentialResponse">
-  </div>
+  <head>
+    <base target="_top" />
+    <style>
+      :root {
+        --bg-color: white;
+        --text-color: #222;
+        --input-bg: #fff;
+        --input-border: #ccc;
+        --btn-bg: #007BFF;
+        --btn-bg-hover: #0056b3;
+        --btn-disabled-bg: #555;
+        --timer-color-active: #4CAF50;
+        --timer-color-inactive: inherit;
+      }
 
-  <div class="g_id_signin" data-type="standard"></div>
+      body.dark {
+        --bg-color: #121212;
+        --text-color: #eee;
+        --input-bg: #222;
+        --input-border: #444;
+      }
 
-  <div id="app" class="hidden">
-    <h2 id="welcome"></h2>
-    <p>Language: <span id="lang"></span></p>
+      body {
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: sans-serif;
 
-    <select id="taskSelect">
-      <option value="MC">MC</option>
-      <option value="CC">CC</option>
-    </select>
+        background-image: url("https://staticfiles.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/2560x1440_air_superiority_logo_ed193962ef380686c0f30174866f51d9.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center top;
+        background-attachment: fixed;
 
-    <button id="startBtn">Start</button>
-    <button id="stopBtn" class="hidden">Stop</button>
-    <p id="timer">00:00:00</p>
-  </div>
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s, color 0.3s;
+      }
 
-  <script>
-    let userData = {};
-    let startTime = null;
-    let timerInterval = null;
-
-    function handleCredentialResponse(response) {
-      const id_token = response.credential;
-
-      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec?endpoint=verify&origin=' + encodeURIComponent(window.location.origin), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_token })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data || !data.name) {
-          alert('Access denied');
-          return;
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: -1;
         }
-        userData = data;
-        document.getElementById('welcome').textContent = `Welcome, ${data.name}`;
-        document.getElementById('lang').textContent = data.lang;
-        document.querySelector('.g_id_signin').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-      })
-      .catch(err => {
-        console.error('Verification failed', err);
+
+      body.dark::before {
+        background-color: rgba(0, 0, 0, 0.75);
+      }
+
+      .container {
+        background: var(--bg-color);
+        padding: 30px 40px;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        min-width: 300px;
+        max-width: 400px;
+        width: 90vw;
+        box-sizing: border-box;
+        text-align: center;
+        color: var(--text-color);
+        transition: background-color 0.3s, color 0.3s;
+        position: relative;
+      }
+
+      label {
+        font-size: 1.5em;
+        display: block;
+        margin-top: 10px;
+        margin-bottom: 5px;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 0px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 2em;
+        font-weight: bold;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1em;
+        text-indent: 10px;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      button {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        border: 1px solid var(--input-border);
+        border-radius: 4px;
+        text-align: center;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1em;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      button {
+        background-color: var(--btn-bg);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s;
+      }
+
+      button:disabled {
+        background-color: var(--btn-disabled-bg);
+        cursor: not-allowed;
+      }
+
+      button:hover:enabled {
+        background-color: var(--btn-bg-hover);
+      }
+
+      #timer {
+        text-align: center;
+        font-size: 2em;
+        font-weight: bold;
+        margin-top: px;
+        color: var(--timer-color-inactive);
+        transition: color 0.3s;
+      }
+
+      #timer.active {
+        color: var(--timer-color-active);
+      }
+
+      #savedTime {
+        font-size: 0.9em;
+        margin-top: 0;
+        min-height: 1.2em;
+        color: #4CAF50;
+        transition: color 0.3s;
+      }
+
+      #toggleThemeBtn {
+          position: absolute;
+          right: 0;
+          bottom: 0;
+          background-color: #444;
+          border-radius: 8px;
+          padding: 2px 6px;
+          width: auto;
+          margin: 0;
+
+      }
+
+      #toggleThemeBtn:hover {
+        background-color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <label>Welcome,</label>
+      <input type="text" id="name" value="<?= defaultName ?>" readonly />
+      <input type="text" id="lang" value="<?= defaultLang ?>" readonly hidden/>
+
+      <label>You are MC or CC today?</label>
+      <select id="modeSelect">
+        <option value="MC">MC</option>
+        <option value="CC">CC</option>
+      </select>
+
+      <button id="startBtn">Start</button>
+      <button id="stopBtn" disabled>Stop</button>
+
+      <p id="timer">00:00:00</p>
+      <p id="savedTime"></p>
+
+      <button id="toggleThemeBtn">Switch to Dark</button>
+    </div>
+
+    <script>
+      const body = document.body;
+      const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+
+      function setTheme(theme) {
+        if (theme === "dark") {
+          body.classList.add("dark");
+          toggleThemeBtn.textContent = "L";
+        } else {
+          body.classList.remove("dark");
+          toggleThemeBtn.textContent = "D";
+        }
+        localStorage.setItem("theme", theme);
+      }
+
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) {
+        setTheme(savedTheme);
+      } else {
+        setTheme("light");
+      }
+
+      toggleThemeBtn.addEventListener("click", () => {
+        if (body.classList.contains("dark")) {
+          setTheme("light");
+        } else {
+          setTheme("dark");
+        }
       });
-    }
 
-    document.getElementById('startBtn').addEventListener('click', () => {
-      startTime = new Date();
-      document.getElementById('startBtn').classList.add('hidden');
-      document.getElementById('stopBtn').classList.remove('hidden');
-      timerInterval = setInterval(() => {
-        const now = new Date();
-        const diff = new Date(now - startTime);
-        const h = String(diff.getUTCHours()).padStart(2, '0');
-        const m = String(diff.getUTCMinutes()).padStart(2, '0');
-        const s = String(diff.getUTCSeconds()).padStart(2, '0');
-        document.getElementById('timer').textContent = `${h}:${m}:${s}`;
-      }, 1000);
-    });
+      let startTime = null;
+      let interval = null;
 
-    document.getElementById('stopBtn').addEventListener('click', () => {
-      const endTime = new Date();
-      clearInterval(timerInterval);
+      function formatTime(ms) {
+        const totalSec = Math.floor(ms / 1000);
+        const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+        const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+        const secs = String(totalSec % 60).padStart(2, "0");
+        return `${hrs}:${mins}:${secs}`;
+      }
 
-      const durationMs = endTime - startTime;
-      const durationSec = Math.floor(durationMs / 1000);
+      const timerEl = document.getElementById("timer");
+      const savedTimeEl = document.getElementById("savedTime");
 
-      const payload = {
-        name: userData.name,
-        lang: userData.lang,
-        task: document.getElementById('taskSelect').value,
-        start: startTime.toISOString(),
-        end: endTime.toISOString(),
-        duration: durationSec
+      document.getElementById("startBtn").onclick = () => {
+        startTime = new Date();
+        document.getElementById("startBtn").disabled = true;
+        document.getElementById("stopBtn").disabled = false;
+
+        savedTimeEl.textContent = "";
+        timerEl.classList.add("active");
+
+        interval = setInterval(() => {
+          const now = new Date();
+          const elapsed = now.getTime() - startTime.getTime();
+          timerEl.textContent = formatTime(elapsed);
+        }, 1000);
       };
 
-      fetch('https://script.google.com/macros/s/AKfycbwYEOZevDPfUdKgx2bLUEZ5PtLqtg-fMdcJ0jgfmnFUHE2jLpkbTkQA7OLQVe4tRjJntA/exec?endpoint=log&origin=' + encodeURIComponent(window.location.origin), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).then(() => {
-        alert('Saved!');
-      }).catch(err => {
-        alert('Save failed');
-        console.error(err);
-      });
+      document.getElementById("stopBtn").onclick = () => {
+        if (!startTime) return;
 
-      document.getElementById('startBtn').classList.remove('hidden');
-      document.getElementById('stopBtn').classList.add('hidden');
-    });
-  </script>
-</body>
+        clearInterval(interval);
+
+        const stopTime = new Date();
+        const durationMs = stopTime.getTime() - startTime.getTime();
+        const durationSec = (durationMs / 1000).toFixed(2);
+
+        const name = document.getElementById("name").value;
+        const language = document.getElementById("lang").value;
+        const mode = document.getElementById("modeSelect").value;
+
+        const startStr = startTime.toISOString();
+        const stopStr = stopTime.toISOString();
+
+        google.script.run.saveTime(
+          startStr,
+          stopStr,
+          language,
+          name,
+          parseFloat(durationSec),
+          mode
+        );
+
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("stopBtn").disabled = true;
+
+        timerEl.textContent = "00:00:00";
+        timerEl.classList.remove("active");
+
+        savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
+        startTime = null;
+      };
+    </script>
+  </body>
 </html>
