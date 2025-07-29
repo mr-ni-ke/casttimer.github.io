@@ -1,295 +1,53 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top" />
-    <style>
-      :root {
-        --bg-color: white;
-        --text-color: #222;
-        --input-bg: #fff;
-        --input-border: #ccc;
-        --btn-bg: #007BFF;
-        --btn-bg-hover: #0056b3;
-        --btn-disabled-bg: #555;
-        --timer-color-active: #4CAF50;
-        --timer-color-inactive: inherit;
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Director timer admin</title>
+</head>
+<body>
+  <h1>Put seconds</h1>
+  <input type="number" id="customTime" placeholder="Time in sec" />
+
+  <h2>With your time:</h2>
+  <button onclick="sendTimer(this, true)">Team A</button>
+  <button onclick="sendTimer(this, true)">Team B</button>
+  <button onclick="sendTimer(this, true)">Team C</button>
+  <button onclick="sendTimer(this, true)">Team D</button>
+  <button onclick="sendTimer(this, true)">Team E</button>
+  <button onclick="sendTimer(this, true)">Team F</button>
+  <button onclick="sendTimer(this, true)">Team G</button>
+  <button onclick="sendTimer(this, true)">Team H</button>
+  <button onclick="sendTimer(this, true)">Leaderboard</button>
+  <button onclick="sendTimer(this, true)">BRB</button>
+  <button onclick="sendTimer(this, true)">Match</button>
+  <button onclick="sendTimer(this, true)">Maps</button>
+  <button onclick="sendTimer(this, true)">Interview</button>
+  <button onclick="sendTimer(this, true)">Lineup</button>
+  <button onclick="sendTimer(this, true)">Team vs Team</button>
+
+  <h2>Defined time:</h2>
+  <button onclick="sendTimer(this, false, 5)">Hercules</button>
+  <button onclick="sendTimer(this, false, 5)">Thrustmaster</button>
+  <button onclick="sendTimer(this, false, 5)">Tank AD</button>
+  <button onclick="sendTimer(this, false, 5)">Heli AD</button>
+  <button onclick="sendTimer(this, false, 5)">AIrplane AD</button>
+
+  <script>
+    const channel = new BroadcastChannel("timer_channel");
+
+    function sendTimer(button, useCustomTime, fixedTime = 0) {
+      const name = button.textContent.trim();
+      let seconds = useCustomTime
+        ? parseInt(document.getElementById("customTime").value, 10)
+        : fixedTime;
+
+      if (isNaN(seconds) || seconds <= 0) {
+        alert("Put time!");
+        return;
       }
 
-      body.dark {
-        --bg-color: #121212;
-        --text-color: #eee;
-        --input-bg: #222;
-        --input-border: #444;
-      }
-
-      body {
-        margin: 0;
-        height: 100vh;
-        width: 100vw;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-family: sans-serif;
-
-        background-image: url("https://staticfiles.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/2560x1440_air_superiority_logo_ed193962ef380686c0f30174866f51d9.jpg");
-        background-repeat: no-repeat;
-        background-size: cover;
-        background-position: center top;
-        background-attachment: fixed;
-
-        background-color: var(--bg-color);
-        color: var(--text-color);
-        transition: background-color 0.3s, color 0.3s;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: -1;
-        }
-
-      body.dark::before {
-        background-color: rgba(0, 0, 0, 0.75);
-      }
-
-      .container {
-        background: var(--bg-color);
-        padding: 30px 40px;
-        border-radius: 10px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        min-width: 300px;
-        max-width: 400px;
-        width: 90vw;
-        box-sizing: border-box;
-        text-align: center;
-        color: var(--text-color);
-        transition: background-color 0.3s, color 0.3s;
-        position: relative;
-      }
-
-      label {
-        font-size: 1.5em;
-        display: block;
-        margin-top: 10px;
-        margin-bottom: 5px;
-      }
-
-      input {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        box-sizing: border-box;
-        border: 0px solid var(--input-border);
-        border-radius: 4px;
-        text-align: center;
-        background: var(--input-bg);
-        color: var(--text-color);
-        font-size: 2em;
-        font-weight: bold;
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-      }
-
-      select {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        box-sizing: border-box;
-        border: 1px solid var(--input-border);
-        border-radius: 4px;
-        text-align: center;
-        background: var(--input-bg);
-        color: var(--text-color);
-        font-size: 1em;
-        text-indent: 10px;
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-      }
-
-      button {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        box-sizing: border-box;
-        border: 1px solid var(--input-border);
-        border-radius: 4px;
-        text-align: center;
-        background: var(--input-bg);
-        color: var(--text-color);
-        font-size: 1em;
-        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-      }
-
-      button {
-        background-color: var(--btn-bg);
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background-color 0.2s;
-      }
-
-      button:disabled {
-        background-color: var(--btn-disabled-bg);
-        cursor: not-allowed;
-      }
-
-      button:hover:enabled {
-        background-color: var(--btn-bg-hover);
-      }
-
-      #timer {
-        text-align: center;
-        font-size: 2em;
-        font-weight: bold;
-        margin-top: px;
-        color: var(--timer-color-inactive);
-        transition: color 0.3s;
-      }
-
-      #timer.active {
-        color: var(--timer-color-active);
-      }
-
-      #savedTime {
-        font-size: 0.9em;
-        margin-top: 0;
-        min-height: 1.2em;
-        color: #4CAF50;
-        transition: color 0.3s;
-      }
-
-      #toggleThemeBtn {
-          position: absolute;
-          right: 0;
-          bottom: 0;
-          background-color: #444;
-          border-radius: 8px;
-          padding: 2px 6px;
-          width: auto;
-          margin: 0;
-
-      }
-
-      #toggleThemeBtn:hover {
-        background-color: #666;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <label>Welcome,</label>
-      <input type="text" id="name" value="<?= defaultName ?>" readonly />
-      <input type="text" id="lang" value="<?= defaultLang ?>" readonly hidden/>
-
-      <label>You are MC or CC today?</label>
-      <select id="modeSelect">
-        <option value="MC">MC</option>
-        <option value="CC">CC</option>
-      </select>
-
-      <button id="startBtn">Start</button>
-      <button id="stopBtn" disabled>Stop</button>
-
-      <p id="timer">00:00:00</p>
-      <p id="savedTime"></p>
-
-      <button id="toggleThemeBtn">Switch to Dark</button>
-    </div>
-
-    <script>
-      const body = document.body;
-      const toggleThemeBtn = document.getElementById("toggleThemeBtn");
-
-      function setTheme(theme) {
-        if (theme === "dark") {
-          body.classList.add("dark");
-          toggleThemeBtn.textContent = "L";
-        } else {
-          body.classList.remove("dark");
-          toggleThemeBtn.textContent = "D";
-        }
-        localStorage.setItem("theme", theme);
-      }
-
-      const savedTheme = localStorage.getItem("theme");
-      if (savedTheme) {
-        setTheme(savedTheme);
-      } else {
-        setTheme("light");
-      }
-
-      toggleThemeBtn.addEventListener("click", () => {
-        if (body.classList.contains("dark")) {
-          setTheme("light");
-        } else {
-          setTheme("dark");
-        }
-      });
-
-      let startTime = null;
-      let interval = null;
-
-      function formatTime(ms) {
-        const totalSec = Math.floor(ms / 1000);
-        const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
-        const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
-        const secs = String(totalSec % 60).padStart(2, "0");
-        return `${hrs}:${mins}:${secs}`;
-      }
-
-      const timerEl = document.getElementById("timer");
-      const savedTimeEl = document.getElementById("savedTime");
-
-      document.getElementById("startBtn").onclick = () => {
-        startTime = new Date();
-        document.getElementById("startBtn").disabled = true;
-        document.getElementById("stopBtn").disabled = false;
-
-        savedTimeEl.textContent = "";
-        timerEl.classList.add("active");
-
-        interval = setInterval(() => {
-          const now = new Date();
-          const elapsed = now.getTime() - startTime.getTime();
-          timerEl.textContent = formatTime(elapsed);
-        }, 1000);
-      };
-
-      document.getElementById("stopBtn").onclick = () => {
-        if (!startTime) return;
-
-        clearInterval(interval);
-
-        const stopTime = new Date();
-        const durationMs = stopTime.getTime() - startTime.getTime();
-        const durationSec = (durationMs / 1000).toFixed(2);
-
-        const name = document.getElementById("name").value;
-        const language = document.getElementById("lang").value;
-        const mode = document.getElementById("modeSelect").value;
-
-        const startStr = startTime.toISOString();
-        const stopStr = stopTime.toISOString();
-
-        google.script.run.saveTime(
-          startStr,
-          stopStr,
-          language,
-          name,
-          parseFloat(durationSec),
-          mode
-        );
-
-        document.getElementById("startBtn").disabled = false;
-        document.getElementById("stopBtn").disabled = true;
-
-        timerEl.textContent = "00:00:00";
-        timerEl.classList.remove("active");
-
-        savedTimeEl.textContent = `Saved time: ${formatTime(durationMs)}`;
-        startTime = null;
-      };
-    </script>
-  </body>
+      channel.postMessage({ name, time: seconds });
+    }
+  </script>
+</body>
 </html>

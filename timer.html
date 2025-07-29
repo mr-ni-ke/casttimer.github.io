@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Director timer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 40px;
+      font-family: sans-serif;
+      background: #f0f0f0;
+      overflow-x: hidden;
+    }
+    .container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
+    #mainTimer {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 40px 60px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      z-index: 10;
+      min-width: 320px;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+    #mainTimer.fade-out {
+      opacity: 0;
+    }
+    #title {
+      margin: 0 0 20px;
+      font-size: 2.5em;
+      color: #333;
+    }
+    #countdown {
+      margin: 0;
+      font-size: 3em;
+      font-weight: bold;
+      color: red;
+    }
+    .queueWrapper {
+      position: absolute;
+      top: 94%;
+      left: 60%;
+      transform: translateY(-50%);
+      height: 100vh;
+      min-width: calc(100vw - 360px);
+      max-width: calc(100vw - 360px);
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-left: 40px;
+      padding-top: 15px;
+    }
+    .queueWrapper h3 {
+      margin: 0 0 10px;
+      color: #555;
+      font-weight: 600;
+    }
+    #queue {
+      display: inline-flex;
+      gap: 30px;
+      align-items: center;
+    }
+    .queued {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      font-size: 1.2em;
+      text-align: center;
+      color: #333;
+      min-width: 150px;
+      flex-shrink: 0;
+      white-space: normal;
+      position: relative;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+    .queued.shrink-and-fade {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    #bigLabel {
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 3em;
+        font-weight: bold;
+        color: black;
+        user-select: none;
+        z-index: 15;
+        text-align: center;
+        white-space: nowrap;
+    }
+    .queued.first {
+        transform: scale(1.2);
+        font-size: 1.5em;
+        min-width: 180px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+    .queue-number {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        font-size: 0.75em;
+        color: #999;
+    }
+    .queue-name {
+        font-weight: bold;
+    }
+    .queue-time {
+        font-size: 0.9em;
+        color: #444;
+    }
+    .queue-countdown {
+        margin-top: 4px;
+        font-size: 0.85em;
+        color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="bigLabel">DIRECTOR TIMELINE</div>
+    <div id="mainTimer">
+      <h1 id="title">Waiting...</h1>
+      <h2 id="countdown">00:00:00</h2>
+    </div>
+    <div class="queueWrapper">
+      <div id="queue"></div>
+    </div>
+  </div>
+
+<script>
+  let isWaitingDelay = false;
+  const titleEl = document.getElementById("title");
+  const countdownEl = document.getElementById("countdown");
+  const queueEl = document.getElementById("queue");
+  const mainTimerEl = document.getElementById("mainTimer");
+  const channel = new BroadcastChannel("timer_channel");
+
+  let queue = [];
+  let currentTimer = null;
+  let currentInterval = null;
+  let countdownElement = null;
+  let queueCountdownInterval = null;
+
+  function formatTime(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return [
+      hours.toString().padStart(2, '0'),
+      minutes.toString().padStart(2, '0'),
+      seconds.toString().padStart(2, '0')
+    ].join(':');
+  }
+
+  function updateQueueDisplay(activeTime = 0) {
+    queueEl.innerHTML = '';
+    countdownElement = null;
+
+    queue.forEach((item, index) => {
+      const el = document.createElement('div');
+      el.className = 'queued';
+
+      const number = document.createElement('div');
+      number.className = 'queue-number';
+      number.textContent = `#${index + 1}`;
+      el.appendChild(number);
+
+      const name = document.createElement('div');
+      name.className = 'queue-name';
+      name.textContent = item.name;
+      el.appendChild(name);
+
+      const time = document.createElement('div');
+      time.className = 'queue-time';
+      time.textContent = formatTime(item.time);
+      el.appendChild(time);
+
+      if (index === 0) {
+        el.classList.add('first');
+
+        const countdown = document.createElement('div');
+        countdown.className = 'queue-countdown';
+
+        if (!item.hasOwnProperty('countdown')) {
+          item.countdown = Math.max(item.time - activeTime + 2, 0);
+        }
+
+        countdown.textContent = `${item.countdown}`;
+        el.appendChild(countdown);
+        countdownElement = countdown;
+
+        if (queueCountdownInterval === null) {
+          queueCountdownInterval = setInterval(() => {
+            if (queue.length > 0 && queue[0].countdown > 0) {
+              queue[0].countdown--;
+              if (countdownElement) {
+                countdownElement.textContent = `${queue[0].countdown}`;
+              }
+            }
+          }, 1000);
+        }
+      }
+
+      queueEl.appendChild(el);
+    });
+  }
+
+  function animateStartNextTimer() {
+    if (queue.length === 0) return;
+
+    const firstQueueItem = queueEl.firstElementChild;
+    if (!firstQueueItem) {
+      startTimerImmediately();
+      return;
+    }
+
+    firstQueueItem.classList.add('shrink-and-fade');
+    mainTimerEl.classList.add('fade-out');
+
+    setTimeout(() => {
+      mainTimerEl.classList.remove('fade-out');
+
+      if (queueCountdownInterval) {
+        clearInterval(queueCountdownInterval);
+        queueCountdownInterval = null;
+      }
+
+      currentTimer = queue.shift();
+      let remaining = currentTimer.time;
+      titleEl.textContent = currentTimer.name;
+      countdownEl.textContent = formatTime(remaining);
+      updateQueueDisplay(0);
+
+      if (currentInterval) clearInterval(currentInterval);
+
+      currentInterval = setInterval(() => {
+        remaining--;
+        countdownEl.textContent = formatTime(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(currentInterval);
+          currentInterval = null;
+          currentTimer = null;
+          countdownEl.textContent = "00:00:00";
+
+          isWaitingDelay = true;
+          setTimeout(() => {
+            isWaitingDelay = false;
+            maybeStartTimer();
+          }, 2000);
+        }
+      }, 1000);
+    }, 500);
+  }
+
+  function maybeStartTimer() {
+    if (!currentTimer && !isWaitingDelay && queue.length > 0) {
+      animateStartNextTimer();
+    }
+  }
+
+  function startTimerImmediately() {
+    if (queue.length === 0) return;
+
+    if (queueCountdownInterval) {
+      clearInterval(queueCountdownInterval);
+      queueCountdownInterval = null;
+    }
+
+    currentTimer = queue.shift();
+    let remaining = currentTimer.time;
+    titleEl.textContent = currentTimer.name;
+    countdownEl.textContent = formatTime(remaining);
+    updateQueueDisplay(0);
+
+    if (currentInterval) clearInterval(currentInterval);
+
+    currentInterval = setInterval(() => {
+      remaining--;
+      countdownEl.textContent = formatTime(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(currentInterval);
+        currentInterval = null;
+        currentTimer = null;
+        countdownEl.textContent = "00:00:00";
+
+        isWaitingDelay = true;
+        setTimeout(() => {
+          isWaitingDelay = false;
+          maybeStartTimer();
+        }, 2000);
+      }
+    }, 1000);
+  }
+
+  channel.onmessage = (event) => {
+    const data = event.data;
+    queue.push({ name: data.name, time: data.time });
+    const activeTime = currentTimer
+      ? parseInt(countdownEl.textContent.split(':').reduce((a, b) => a * 60 + +b, 0))
+      : 0;
+    updateQueueDisplay(activeTime);
+    maybeStartTimer();
+  };
+</script>
+</body>
+</html>
